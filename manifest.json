@@ -1,0 +1,23 @@
+{
+  "name": "작심365 - 미루지 않는 하루",
+  "short_name": "작심365",
+  "description": "미루는 습관을 고치고 목표를 달성하는 습관 관리 앱",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
