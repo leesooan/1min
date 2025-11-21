@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>작심365 - 미루지 않는 하루</title>
+    
+    <!-- PWA 설정 -->
+    <meta name="theme-color" content="#6366f1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="작심365">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/png" href="icon.png">
+    <link rel="apple-touch-icon" href="icon.png">
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            max-width: 480px;
+            margin: 0 auto;
+            height: 100vh;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        
+        .screen {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 80px;
+        }
+        
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            max-width: 480px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .nav-item {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 12px;
+            color: #999;
+            transition: color 0.3s;
+        }
+        
+        .nav-item.active {
+            color: #6366f1;
+            font-weight: bold;
+        }
+        
+        .nav-item:hover {
+            color: #6366f1;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background: #6366f1;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #4f46e5;
+        }
+        
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+        }
+        
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+        
+        .btn-full {
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #1f2937;
+        }
+        
+        h2 {
+            font-size: 22px;
+            margin-bottom: 15px;
+            color: #374151;
+        }
+        
+        h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #4b5563;
+        }
+        
+        .tutorial {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .tutorial-content {
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .tutorial-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+        }
+        
+        .tutorial-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .auth-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 500px;
+        }
+        
+        .auth-buttons {
+            width: 100%;
+            max-width: 300px;
+            margin-top: 20px;
+        }
+        
+        .skip-text {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #6b7280;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+        
+        .task-list {
+            list-style: none;
+        }
+        
+        .task-item, .routine-item {
+            background: #f9fafb;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid #6366f1;
+        }
+        
+        .task-item:hover, .routine-item:hover {
+            background: #f3f4f6;
+            transform: translateX(5px);
+        }
+        
+        .task-name {
+            font-weight: 600;
+            color: #1f2937;
+            margin-bottom: 5px;
+        }
+        
+        .task-time {
+            font-size: 14px;
+            color: #6b7280;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: #6366f1;
+        }
+        
+        .timer-display {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .timer-circle {
+            width: 250px;
+            height: 250px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 30px auto;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+        }
+        
+        .timer-text {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+        }
+        
+        .timer-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 36px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .motivation-quote {
+            background: #fef3c7;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            border-left: 4px solid #f59e0b;
+        }
+        
+        .quote-text {
+            font-style: italic;
+            color: #92400e;
+            font-size: 18px;
+            line-height: 1.6;
+        }
+        
+        .list-section {
+            margin-top: 20px;
+        }
+        
+        .completed {
+            opacity: 0.6;
+            text-decoration: line-through;
+        }
+        
+        .time-picker {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        
+        .time-picker select {
+            padding: 10px;
+            font-size: 18px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #9ca3af;
+        }
+        
+        .empty-icon {
+            font-size: 64px;
+            margin-bottom: 10px;
+        }
+        
+        .routine-section, .task-section {
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .add-text {
+            font-size: 14px;
+            color: #6366f1;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .settings-item {
+            padding: 15px;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .settings-item:hover {
+            background: #f9fafb;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+            transition: width 0.3s;
+        }
+
+        .install-prompt {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .install-prompt button {
+            background: white;
+            color: #6366f1;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .stat-box {
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .stat-box-green {
+            background: #f0fdf4;
+        }
+
+        .stat-box-yellow {
+            background: #fef3c7;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const App = () => {
+            const [currentScreen, setCurrentScreen] = useState('tutorial');
+            const [tutorialStep, setTutorialStep] = useState(0);
+            const [hasRoutine, setHasRoutine] = useState(null);
+            const [routines, setRoutines] = useState([]);
+            const [tasks, setTasks] = useState([]);
+            const [showModal, setShowModal] = useState(false);
+            const [modalType, setModalType] = useState('');
+            const [currentTimer, setCurrentTimer] = useState(null);
+            const [timerSeconds, setTimerSeconds] = useState(0);
+            const [isTimerRunning, setIsTimerRunning] = useState(false);
+            const [completedTasks, setCompletedTasks] = useState([]);
+            const [bottomNav, setBottomNav] = useState('home');
+            const [deferredPrompt, setDeferredPrompt] = useState(null);
+            const [showInstallPrompt, setShowInstallPrompt] = useState(false);
+
+            const tutorials = [
+                { icon: '🎯', title: '작심365에 오신 것을 환영합니다!', desc: '더 이상 미루지 않고, 목표를 달성하세요' },
+                { icon: '⏰', title: '타이머로 집중하세요', desc: '할 일마다 타이머를 설정하여 집중력을 높이세요' },
+                { icon: '📅', title: '루틴을 만들어보세요', desc: '매일 반복되는 습관을 만들어 성장하세요' },
+                { icon: '🏆', title: '성취를 확인하세요', desc: '완료한 일들을 보며 동기부여를 받으세요' }
+            ];
+
+            const motivationQuotes = [
+                "오늘 하루도 최선을 다하고 있어요! 💪",
+                "시작이 반이에요. 이미 잘하고 계세요! 🌟",
+                "꾸준함이 가장 큰 힘입니다! 🔥",
+                "작은 실천이 큰 변화를 만들어요! ✨",
+                "당신은 할 수 있어요! 🎯"
+            ];
+
+            // PWA 설치 이벤트 감지
+            useEffect(() => {
+                const handleBeforeInstallPrompt = (e) => {
+                    e.preventDefault();
+                    setDeferredPrompt(e);
+                    setShowInstallPrompt(true);
+                };
+
+                window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+
+                return () => {
+                    window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+                };
+            }, []);
+
+            const handleInstallClick = async () => {
+                if (!deferredPrompt) {
+                    return;
+                }
+
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                
+                if (outcome === 'accepted') {
+                    console.log('PWA 설치됨');
+                }
+                
+                setDeferredPrompt(null);
+                setShowInstallPrompt(false);
+            };
+
+            useEffect(() => {
+                const saved = localStorage.getItem('appData');
+                if (saved) {
+                    const data = JSON.parse(saved);
+                    setRoutines(data.routines || []);
+                    setTasks(data.tasks || []);
+                    setCompletedTasks(data.completedTasks || []);
+                }
+            }, []);
+
+            useEffect(() => {
+                localStorage.setItem('appData', JSON.stringify({
+                    routines,
+                    tasks,
+                    completedTasks
+                }));
+            }, [routines, tasks, completedTasks]);
+
+            useEffect(() => {
+                let interval;
+                if (isTimerRunning && timerSeconds > 0) {
+                    interval = setInterval(() => {
+                        setTimerSeconds(prev => prev - 1);
+                    }, 1000);
+                } else if (timerSeconds === 0 && isTimerRunning) {
+                    setIsTimerRunning(false);
+                    alert('타이머가 종료되었습니다! 🎉');
+                }
+                return () => clearInterval(interval);
+            }, [isTimerRunning, timerSeconds]);
+
+            const formatTime = (seconds) => {
+                const h = Math.floor(seconds / 3600);
+                const m = Math.floor((seconds % 3600) / 60);
+                const s = seconds % 60;
+                return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+            };
+
+            const addTask = (taskData) => {
+                setTasks([...tasks, { ...taskData, id: Date.now() }]);
+                setShowModal(false);
+            };
+
+            const addRoutine = (routineData) => {
+                setRoutines([...routines, { ...routineData, id: Date.now() }]);
+                setShowModal(false);
+            };
+
+            const startTimer = (item, type) => {
+                setCurrentTimer({ ...item, type });
+                setTimerSeconds(item.duration || 0);
+                setCurrentScreen('timer');
+                setIsTimerRunning(true);
+            };
+
+            const completeTask = () => {
+                if (currentTimer) {
+                    setCompletedTasks([...completedTasks, { 
+                        ...currentTimer, 
+                        completedAt: new Date().toISOString() 
+                    }]);
+                }
+                setIsTimerRunning(false);
+                setCurrentTimer(null);
+                setCurrentScreen('home');
+                setShowModal(true);
+                setModalType('nextTask');
+            };
+
+            const TutorialScreen = () => (
+                <div className="tutorial">
+                    <div className="tutorial-content">
+                        <div className="tutorial-icon">{tutorials[tutorialStep].icon}</div>
+                        <h1>{tutorials[tutorialStep].title}</h1>
+                        <p style={{color: '#6b7280', marginTop: '10px', fontSize: '16px'}}>
+                            {tutorials[tutorialStep].desc}
+                        </p>
+                    </div>
+                    <div className="tutorial-buttons">
+                        <button className="btn btn-secondary" onClick={() => setCurrentScreen('auth')}>
+                            건너뛰기
+                        </button>
+                        <button className="btn btn-primary" onClick={() => {
+                            if (tutorialStep < tutorials.length - 1) {
+                                setTutorialStep(tutorialStep + 1);
+                            } else {
+                                setCurrentScreen('auth');
+                            }
+                        }}>
+                            {tutorialStep < tutorials.length - 1 ? '다음' : '시작하기'}
+                        </button>
+                    </div>
+                </div>
+            );
+
+            const AuthScreen = () => (
+                <div className="auth-screen">
+                    <h1 style={{textAlign: 'center'}}>🎯 작심365</h1>
+                    <p style={{color: '#6b7280', marginTop: '10px', textAlign: 'center'}}>
+                        미루지 않는 습관, 오늘부터 시작하세요
+                    </p>
+                    <div className="auth-buttons">
+                        <button className="btn btn-primary btn-full">로그인</button>
+                        <button className="btn btn-secondary btn-full">회원가입</button>
+                        <div className="skip-text" onClick={() => setCurrentScreen('routineCheck')}>
+                            그냥 둘러볼게요
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const RoutineCheckScreen = () => (
+                <div className="screen">
+                    <h2 style={{textAlign: 'center', marginTop: '60px'}}>
+                        평소 하시는 루틴이 있나요?
+                    </h2>
+                    <p style={{textAlign: 'center', color: '#6b7280', marginTop: '10px'}}>
+                        아침 운동, 독서 등 매일 반복하는 습관을 말해요
+                    </p>
+                    <div style={{display: 'flex', gap: '10px', marginTop: '40px'}}>
+                        <button className="btn btn-primary btn-full" onClick={() => {
+                            setHasRoutine(true);
+                            setModalType('addRoutine');
+                            setShowModal(true);
+                        }}>
+                            네
+                        </button>
+                        <button className="btn btn-secondary btn-full" onClick={() => {
+                            setHasRoutine(false);
+                            setCurrentScreen('home');
+                            setBottomNav('home');
+                        }}>
+                            아니오
+                        </button>
+                    </div>
+                </div>
+            );
+
+            const HomeScreen = () => (
+                <div className="screen">
+                    {showInstallPrompt && (
+                        <div className="install-prompt">
+                            <div>
+                                <div style={{fontWeight: 'bold', marginBottom: '5px'}}>📱 홈 화면에 추가</div>
+                                <div style={{fontSize: '14px'}}>앱처럼 사용하세요!</div>
+                            </div>
+                            <button onClick={handleInstallClick}>설치</button>
+                        </div>
+                    )}
+
+                    <h1>오늘 할 일</h1>
+                    
+                    <div className="task-section">
+                        <div className="section-header">
+                            <h3>📝 할 일 목록</h3>
+                            <span className="add-text" onClick={() => {
+                                setModalType('addTask');
+                                setShowModal(true);
+                            }}>+ 추가</span>
+                        </div>
+                        {tasks.length === 0 ? (
+                            <div className="empty-state">
+                                <div className="empty-icon">📋</div>
+                                <p>할 일을 추가해보세요</p>
+                            </div>
+                        ) : (
+                            <ul className="task-list">
+                                {tasks.map(task => (
+                                    <li key={task.id} className="task-item" onClick={() => startTimer(task, 'task')}>
+                                        <div className="task-name">{task.name}</div>
+                                        <div className="task-time">⏱️ {formatTime(task.duration)}</div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+
+                    <div className="routine-section">
+                        <div className="section-header">
+                            <h3>🔄 루틴</h3>
+                            <span className="add-text" onClick={() => {
+                                setModalType('addRoutine');
+                                setShowModal(true);
+                            }}>+ 추가</span>
+                        </div>
+                        {routines.length === 0 ? (
+                            <div className="empty-state">
+                                <div className="empty-icon">📅</div>
+                                <p>루틴을 생성해주세요</p>
+                            </div>
+                        ) : (
+                            <ul className="task-list">
+                                {routines.map(routine => (
+                                    <li key={routine.id} className="routine-item" onClick={() => {
+                                        setCurrentTimer(routine);
+                                        setModalType('routineTimer');
+                                        setShowModal(true);
+                                    }}>
+                                        <div className="task-name">{routine.name}</div>
+                                        <div className="task-time">🕐 {routine.timeSlot}</div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </div>
+                </div>
+            );
+
+            const TodayScreen = () => {
+                const todayCompleted = completedTasks.filter(task => {
+                    const today = new Date().toDateString();
+                    return new Date(task.completedAt).toDateString() === today;
+                });
+
+                const incompleteTasks = tasks.filter(task => 
+                    !completedTasks.some(ct => ct.id === task.id)
+                );
+
+                return (
+                    <div className="screen">
+                        <h1>오늘</h1>
+                        
+                        <div className="motivation-quote">
+                            <div className="quote-text">
+                                {motivationQuotes[Math.floor(Math.random() * motivationQuotes.length)]}
+                            </div>
+                        </div>
+
+                        <div className="stat-card">
+                            <div>오늘 완료한 일</div>
+                            <div className="stat-number">{todayCompleted.length}</div>
+                            <div>개</div>
+                        </div>
+
+                        {todayCompleted.length > 0 && (
+                            <div className="list-section">
+                                <h3>✅ 완료한 일들</h3>
+                                <p style={{color: '#16a34a', marginBottom: '10px'}}>잘하고 계세요! 🎉</p>
+                                <ul className="task-list">
+                                    {todayCompleted.map(task => (
+                                        <li key={task.id} className="task-item">
+                                            <div className="task-name">✓ {task.name}</div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
+                        {incompleteTasks.length > 0 && (
+                            <div className="list-section">
+                                <h3>⏳ 미완료 항목</h3>
+                                <p style={{color: '#f59e0b', marginBottom: '10px'}}>다음엔 노력해보세요! 💪</p>
+                                <ul className="task-list">
+                                    {incompleteTasks.map(task => (
+                                        <li key={task.id} className="task-item" onClick={() => startTimer(task, 'task')}>
+                                            <div className="task-name">{task.name}</div>
+                                            <button className="btn btn-primary" style={{marginTop: '10px'}} 
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    startTimer(task, 'task');
+                                                }}>
+                                                다시하기
+                                            </button>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            const ProfileScreen = () => {
+                const totalCompleted = completedTasks.length;
+                const totalTasks = tasks.length + routines.length;
+                const completionRate = totalTasks > 0 ? Math.round((totalCompleted / totalTasks) * 100) : 0;
+
+                return (
+                    <div className="screen">
+                        <h1>마이페이지</h1>
+                        
+                        <div className="stat-card">
+                            <div>내 달성률</div>
+                            <div className="stat-number">{completionRate}%</div>
+                            <div className="progress-bar">
+                                <div className="progress-fill" style={{width: `${completionRate}%`}}></div>
+                            </div>
+                        </div>
+
+                        <div className="stat-grid">
+                            <div className="stat-box stat-box-green">
+                                <div style={{fontSize: '14px', color: '#16a34a'}}>완료</div>
+                                <div style={{fontSize: '32px', fontWeight: 'bold', color: '#16a34a', margin: '10px 0'}}>
+                                    {totalCompleted}
+                                </div>
+                                <div style={{fontSize: '14px', color: '#16a34a'}}>개</div>
+                            </div>
+                            <div className="stat-box stat-box-yellow">
+                                <div style={{fontSize: '14px', color: '#f59e0b'}}>미완료</div>
+                                <div style={{fontSize: '32px', fontWeight: 'bold', color: '#f59e0b', margin: '10px 0'}}>
+                                    {totalTasks - totalCompleted}
+                                </div>
+                                <div style={{fontSize: '14px', color: '#f59e0b'}}>개</div>
+                            </div>
+                        </div>
+
+                        <div style={{marginTop: '30px'}}>
+                            <h3>📊 내 활동</h3>
+                            <div style={{background: '#f9fafb', padding: '15px', borderRadius: '8px', marginTop: '10px'}}>
+                                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '10px'}}>
+                                    <span>총 할 일</span>
+                                    <span style={{fontWeight: 'bold'}}>{tasks.length}개</span>
+                                </div>
+                                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '10px'}}>
+                                    <span>총 루틴</span>
+                                    <span style={{fontWeight: 'bold'}}>{routines.length}개</span>
+                                </div>
+                                <div style={{display: 'flex', justifyContent: 'space-between'}}>
+                                    <span>완료한 작업</span>
+                                    <span style={{fontWeight: 'bold', color: '#16a34a'}}>{completedTasks.length}개</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const SettingsScreen = () => (
+                <div className="screen">
+                    <h1>설정</h1>
+                    
+                    <div style={{marginTop: '20px'}}>
+                        <div className="settings-item">
+                            <span>알림 설정</span>
+                            <span>🔔</span>
+                        </div>
+                        <div className="settings-item">
+                            <span>다크 모드</span>
+                            <span>🌙</span>
+                        </div>
+                        <div className="settings-item" onClick={() => {
+                            if (confirm('모든 데이터가 삭제됩니다. 계속하시겠습니까?')) {
+                                localStorage.removeItem('appData');
+                                window.location.reload();
+                            }
+                        }}>
+                            <span>데이터 초기화</span>
+                            <span>🗑️</span>
+                        </div>
+                        <div className="settings-item">
+                            <span>앱 정보</span>
+                            <span>ℹ️</span>
+                        </div>
+                        <div className="settings-item" onClick={() => {
+                            if (confirm('로그아웃 하시겠습니까?')) {
+                                setCurrentScreen('auth');
+                            }
+                        }}>
+                            <span>로그아웃</span>
+                            <span>🚪</span>
+                        </div>
+                    </div>
+                </div>
+            );
+
+            const TimerScreen = () => (
+                <div className="timer-display">
+                    <h2>{currentTimer?.name}</h2>
+                    <div className="timer-circle">
+                        <div className="timer-text">{formatTime(timerSeconds)}</div>
+                    </div>
+                    <div className="timer-buttons">
+                        <button className="btn btn-secondary" style={{flex: 1}} onClick={() => {
+                            if (confirm('정말 그만두시겠어요?')) {
+                                setIsTimerRunning(false);
+                                setCurrentTimer(null);
+                                setCurrentScreen('home');
+                            }
+                        }}>
+                            나가기
+                        </button>
+                        <button className="btn btn-primary" style={{flex: 1}} onClick={() => {
+                            setIsTimerRunning(!isTimerRunning);
+                        }}>
+                            {isTimerRunning ? '⏸️ 일시정지' : '▶️ 시작'}
+                        </button>
+                    </div>
+                    {!isTimerRunning && (
+                        <button className="btn btn-primary btn-full" onClick={completeTask}>
+                            ✅ 완료
+                        </button>
+                    )}
+                </div>
+            );
+
+            const TaskModal = () => {
+                const [name, setName] = useState('');
+                const [hours, setHours] = useState(0);
+                const [minutes, setMinutes] = useState(25);
+                const [seconds, setSeconds] = useState(0);
+
+                return (
+                    <div className="modal" onClick={() => setShowModal(false)}>
+                        <div className="modal-content" onClick={e => e.stopPropagation()}>
+                            <h2>할 일 추가</h2>
+                            <div className="input-group">
+                                <label>할 일 이름</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="예: 영어 공부"
+                                    value={name}
+                                    onChange={e => setName(e.target.value)}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>예상 시간</label>
+                                <div className="time-picker">
+                                    <select value={hours} onChange={e => setHours(parseInt(e.target.value))}>
+                                        {[...Array(24)].map((_, i) => <option key={i} value={i}>{i}시간</option>)}
+                                    </select>
+                                    <select value={minutes} onChange={e => setMinutes(parseInt(e.target.value))}>
+                                        {[...Array(60)].map((_, i) => <option key={i} value={i}>{i}분</option>)}
+                                    </select>
+                                    <select value={seconds} onChange={e => setSeconds(parseInt(e.target.value))}>
+                                        {[...Array(60)].map((_, i) => <option key={i} value={i}>{i}초</option>)}
+                                    </select>
+                                </div>
+                            </div>
+                            <button className="btn btn-primary btn-full" onClick={() => {
+                                if (name) {
+                                    addTask({
+                                        name,
+                                        duration: hours * 3600 + minutes * 60 + seconds
+                                    });
+                                }
+                            }}>
+                                추가하기
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
+            const RoutineModal = () => {
+                const [name, setName] = useState('');
+                const [timeSlot, setTimeSlot] = useState('아침');
+
+                return (
+                    <div className="modal" onClick={() => setShowModal(false)}>
+                        <div className="modal-content" onClick={e => e.stopPropagation()}>
+                            <h2>루틴 추가</h2>
+                            <div className="input-group">
+                                <label>루틴 이름</label>
+                                <input 
+                                    type="text" 
+                                    placeholder="예: 아침 운동"
+                                    value={name}
+                                    onChange={e => setName(e.target.value)}
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label>시간대</label>
+                                <select value={timeSlot} onChange={e => setTimeSlot(e.target.value)}>
+                                    <option>새벽 (00:00-06:00)</option>
+                                    <option>아침 (06:00-12:00)</option>
+                                    <option>오후 (12:00-18:00)</option>
+                                    <option>저녁 (18:00-24:00)</option>
+                                </select>
+                            </div>
+                            <button className="btn btn-primary btn-full" onClick={() => {
+                                if (name) {
+                                    addRoutine({ name, timeSlot });
+                                    if (hasRoutine === true) {
+                                        setCurrentScreen('home');
+                                        setBottomNav('home');
+                                    }
+                                }
+                            }}>
+                                추가하기
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
+            const RoutineTimerModal = () => {
+                const [useTimer, setUseTimer] = useState(false);
+                const [hours, setHours] = useState(0);
+                const [minutes, setMinutes] = useState(30);
+                const [seconds, setSeconds] = useState(0);
+
+                return (
+                    <div className="modal" onClick={() => setShowModal(false)}>
+                        <div className="modal-content" onClick={e => e.stopPropagation()}>
+                            <h2>{currentTimer?.name}</h2>
+                            <p style={{color: '#6b7280', marginBottom: '20px'}}>타이머를 설정하시겠어요?</p>
+                            
+                            <div style={{display: 'flex', gap: '10px', marginBottom: '20px'}}>
+                                <button 
+                                    className={`btn ${useTimer ? 'btn-primary' : 'btn-secondary'}`}
+                                    style={{flex: 1}}
+                                    onClick={() => setUseTimer(true)}
+                                >
+                                    네
+                                </button>
+                                <button 
+                                    className={`btn ${!useTimer ? 'btn-primary' : 'btn-secondary'}`}
+                                    style={{flex: 1}}
+                                    onClick={() => setUseTimer(false)}
+                                >
+                                    아니오
+                                </button>
+                            </div>
+
+                            {useTimer && (
+                                <div className="input-group">
+                                    <label>시간 설정</label>
+                                    <div className="time-picker">
+                                        <select value={hours} onChange={e => setHours(parseInt(e.target.value))}>
+                                            {[...Array(24)].map((_, i) => <option key={i} value={i}>{i}시간</option>)}
+                                        </select>
+                                        <select value={minutes} onChange={e => setMinutes(parseInt(e.target.value))}>
+                                            {[...Array(60)].map((_, i) => <option key={i} value={i}>{i}분</option>)}
+                                        </select>
+                                        <select value={seconds} onChange={e => setSeconds(parseInt(e.target.value))}>
+                                            {[...Array(60)].map((_, i) => <option key={i} value={i}>{i}초</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+                            )}
+
+                            <button className="btn btn-primary btn-full" onClick={() => {
+                                const duration = useTimer ? hours * 3600 + minutes * 60 + seconds : 0;
+                                if (useTimer && duration > 0) {
+                                    startTimer({...currentTimer, duration}, 'routine');
+                                } else if (!useTimer) {
+                                    setCompletedTasks([...completedTasks, {
+                                        ...currentTimer,
+                                        completedAt: new Date().toISOString()
+                                    }]);
+                                    setShowModal(false);
+                                    alert('루틴이 시작되었습니다!');
+                                }
+                            }}>
+                                시작하기
+                            </button>
+                        </div>
+                    </div>
+                );
+            };
+
+            const NextTaskModal = () => (
+                <div className="modal" onClick={() => setShowModal(false)}>
+                    <div className="modal-content" onClick={e => e.stopPropagation()}>
+                        <h2>완료! 🎉</h2>
+                        <p style={{color: '#6b7280', marginBottom: '20px'}}>다음 할 일도 진행해볼까요?</p>
+                        
+                        {tasks.length > 0 && (
+                            <div>
+                                <h3 style={{marginBottom: '10px'}}>할 일 목록</h3>
+                                <ul className="task-list">
+                                    {tasks.map(task => (
+                                        <li key={task.id} className="task-item" onClick={() => {
+                                            setShowModal(false);
+                                            startTimer(task, 'task');
+                                        }}>
+                                            <div className="task-name">{task.name}</div>
+                                            <div className="task-time">⏱️ {formatTime(task.duration)}</div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+                        
+                        <button className="btn btn-secondary btn-full" onClick={() => setShowModal(false)}>
+                            나중에 할게요
+                        </button>
+                    </div>
+                </div>
+            );
+
+            const renderScreen = () => {
+                if (currentScreen === 'tutorial') return <TutorialScreen />;
+                if (currentScreen === 'auth') return <AuthScreen />;
+                if (currentScreen === 'routineCheck') return <RoutineCheckScreen />;
+                if (currentScreen === 'timer') return <TimerScreen />;
+                if (bottomNav === 'home') return <HomeScreen />;
+                if (bottomNav === 'today') return <TodayScreen />;
+                if (bottomNav === 'profile') return <ProfileScreen />;
+                if (bottomNav === 'settings') return <SettingsScreen />;
+            };
+
+            return (
+                <div className="app-container">
+                    {renderScreen()}
+                    
+                    {(currentScreen === 'home' || bottomNav) && currentScreen !== 'tutorial' && currentScreen !== 'auth' && currentScreen !== 'routineCheck' && currentScreen !== 'timer' && (
+                        <div className="bottom-nav">
+                            <button className={`nav-item ${bottomNav === 'home' ? 'active' : ''}`} 
+                                onClick={() => {setBottomNav('home'); setCurrentScreen('home');}}>
+                                🏠<br/>홈
+                            </button>
+                            <button className={`nav-item ${bottomNav === 'today' ? 'active' : ''}`} 
+                                onClick={() => setBottomNav('today')}>
+                                💪<br/>오늘
+                            </button>
+                            <button className={`nav-item ${bottomNav === 'profile' ? 'active' : ''}`} 
+                                onClick={() => setBottomNav('profile')}>
+                                👤<br/>마이페이지
+                            </button>
+                            <button className={`nav-item ${bottomNav === 'settings' ? 'active' : ''}`} 
+                                onClick={() => setBottomNav('settings')}>
+                                ⚙️<br/>설정
+                            </button>
+                        </div>
+                    )}
+
+                    {showModal && modalType === 'addTask' && <TaskModal />}
+                    {showModal && modalType === 'addRoutine' && <RoutineModal />}
+                    {showModal && modalType === 'routineTimer' && <RoutineTimerModal />}
+                    {showModal && modalType === 'nextTask' && <NextTaskModal />}
+                </div>
+            );
+        };
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+
+    <!-- Service Worker 등록 -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker 등록 성공'))
+                    .catch(err => console.log('Service Worker 등록 실패', err));
+            });
+        }
+    </script>
+</body>
+</html>
